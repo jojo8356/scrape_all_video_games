@@ -1,35 +1,55 @@
 from bs4 import BeautifulSoup as bs
 import requests as r,time,requests
+
 remove_duplicates = lambda original_list: list(set(original_list))
 affiche = lambda liste: [print(i, element.text) for i, element in enumerate(liste)]
+
 consoles_select = ['Dreamcast','Famicom','Game Boy','Game Boy Advance','Game Boy Color','GameCube','Linux','Master System','Mega Drive','par navigateur','Nintendo 3DS','Nintendo 64','Nintendo DS','Nintendo Entertainment System','Nintendo Switch','PlayStation','PlayStation 2','PlayStation 3','PlayStation 4','PlayStation 5','PlayStation Portable','PlayStation Vita','Super Famicom','Super Nintendo','Wii','Wii U','Windows (0-9)','Xbox','Xbox 360','Xbox One','Xbox Series']
+
 start = time.time()
+
 jeux = []
 liens = []
+console = []
+indexes = [1, 6, 9]
+urls = []
+
 response = r.get("https://fr.wikipedia.org/wiki/Liste_de_jeux_vid%C3%A9o")
 soup = bs(response.content, 'lxml')
 consoles = soup.find("div", {"id": "mw-content-text"}).find_all("ul")
-console = []
-indexes = [1, 6, 9]
+
 for index in indexes:
     for x in consoles[index].find_all("li"):
         console.append(x.find("a"))
+
 for x in console:
     liens.append(x["href"]) if ("title" in x and x["title"].replace("Liste de jeux ","") in consoles_select) else None
+
 for x in range(len(liens)):
     if "/wiki/" in liens[x]:
         liens[x] = "https://fr.wikipedia.org"+liens[x]
-urls = []
-def dreamcast():
-    response = r.get(liens[0])
+
+def get_links(url_index, tbody_index, td_index, td_check_index=None, td_check_value=None):
+    response = r.get(liens[url_index])
     soup = bs(response.content, 'lxml')
-    tr = soup.find_all("tbody")[2].find_all("tr")
-    for x in tr:
-        EU = x.find("td",{"bgcolor":"#bbbbff"})
-        if EU != None:
-            url = x.find("td").find("a")["href"]
-            if "/wiki/" in url:
-                urls.append("https://fr.wikipedia.org"+url)
+    tbody = soup.find_all("tbody")[tbody_index]
+    tr_list = tbody.find_all("tr")
+
+    for tr in tr_list:
+        try:
+            if td_check_index is not None:
+                td_check = tr.find_all("td")[td_check_index].text.strip()
+                if td_check == td_check_value:
+                    url = tr.find_all("td")[td_index].find("a")["href"]
+                    if "/wiki/" in url:
+                        urls.append("https://fr.wikipedia.org" + url)
+            else:
+                url = tr.find_all("td")[td_index].find("a")["href"]
+                if "/wiki/" in url:
+                    urls.append("https://fr.wikipedia.org" + url)
+        except:
+            pass
+
 def famicom():
     response = r.get(liens[1])
     soup = bs(response.content, 'lxml')
@@ -54,20 +74,7 @@ def GB():
                 url = y.find("a")["href"]
                 if "/w/index.php?title=" not in url:
                     urls.append("https://fr.wikipedia.org"+url)
-def GBA():
-    response = r.get(liens[3])
-    soup = bs(response.content, 'lxml')
-    tr = soup.find_all("tbody")[1].find_all("tr")
-    del tr[0]
-    for x in tr:
-        try:
-            EU = x.find_all("td")[6].text
-            if EU == "✔\n":
-                url = (x.find_all("td")[0].find("a")["href"])
-                if "/w/index.php?title=" not in url:
-                    urls.append("https://fr.wikipedia.org"+url)
-        except:
-            pass
+
 def GBC():
     response = r.get(liens[4])
     soup = bs(response.content, 'lxml')
@@ -178,9 +185,9 @@ def N_six_quatre():
                         urls.append("https://fr.wikipedia.org"+url)
             except:
                 pass
-    del urls[urls.index("https://fr.wikipedia.org/wiki/Nintendo_64DD")]
-    del urls[urls.index("https://fr.wikipedia.org/wiki/Japon")]
-    del urls[urls.index("https://fr.wikipedia.org/wiki/Australie")]
+    urls_2 = ["https://fr.wikipedia.org/wiki/Nintendo_64DD","https://fr.wikipedia.org/wiki/Japon","https://fr.wikipedia.org/wiki/Australie"]
+    for x in urls_2:
+        del urls[urls.index(x)]
 
 def DS():
     response = r.get(liens[12])
@@ -227,89 +234,28 @@ def switch():
                         urls.append("https://fr.wikipedia.org"+url)
             except:
                 pass
-def PS_un():
-    response = r.get(liens[15])
+
+def get_urls(i, urls):
+    response = r.get(liens[i])
     soup = bs(response.content, 'lxml')
-    div = soup.find("div",{"class":"mw-parser-output"})
+    div = soup.find("div", {"class": "mw-parser-output"})
     test = div.find_all("ul")
-    for x in range(37):
+    for x in range(len(test)):
         test = div.find_all("ul")[x].find_all("li")
         for y in test:
             try:
+                if i in [15, 16, 19]:
                     url = y.find("a")["href"]
-                    if "/w/index.php?title=" not in url:
-                        urls.append("https://fr.wikipedia.org"+url)
+                else:
+                    if " - J" in y.text:
+                        continue
+                    url = y.find("a")["href"]
+
+                if "/w/index.php?title=" not in url:
+                    urls.append("https://fr.wikipedia.org" + url)
             except:
                 pass
-    del urls[urls.index("https://fr.wikipedia.org/wiki/Platinum_(Sony)")]
-def PS_deux():
-    response = r.get(liens[16])
-    soup = bs(response.content, 'lxml')
-    div = soup.find("div",{"class":"mw-parser-output"})
-    test = div.find_all("ul")
-    for x in range(51):
-        test = div.find_all("ul")[x].find_all("li")
-        for y in test:
-            try:
-                    url = y.find("a")["href"]
-                    if "/w/index.php?title=" not in url:
-                        urls.append("https://fr.wikipedia.org"+url)
-            except:
-                pass
-def PS_trois():
-    response = r.get(liens[17])
-    soup = bs(response.content, 'lxml')
-    div = soup.find("div",{"class":"mw-parser-output"})
-    test = div.find_all("ul")
-    for x in range(28):
-        test = div.find_all("ul")[x].find_all("li")
-        for y in test:
-            try:
-                if " - J" not in (y.text):
-                    url = y.find("a")["href"]
-                    if "/w/index.php?title=" not in url:
-                        urls.append("https://fr.wikipedia.org"+url)
-            except:
-                pass
-def PS_quatre():
-    response = r.get(liens[18])
-    soup = bs(response.content, 'lxml')
-    div = soup.find("div",{"class":"mw-parser-output"})
-    test = div.find_all("ul")
-    for x in range(29):
-        test = div.find_all("ul")[x].find_all("li")
-        for y in test:
-            try:
-                if " - J" not in (y.text):
-                    url = y.find("a")["href"]
-                    if "/w/index.php?title=" not in url:
-                        urls.append("https://fr.wikipedia.org"+url)
-            except:
-                pass
-def PS_cinq():
-    response = r.get(liens[19])
-    soup = bs(response.content, 'lxml')
-    div = soup.find("div",{"class":"mw-parser-output"})
-    test = div.find_all("ul")
-    for x in range(38):
-        test = div.find_all("ul")[x].find_all("li")
-        for y in test:
-            try:
-                    url = y.find("a")["href"]
-                    if "/w/index.php?title=" not in url:
-                        urls.append("https://fr.wikipedia.org"+url)
-            except:
-                pass
-def PSP():
-    response = r.get(liens[20])
-    soup = bs(response.content, 'lxml')
-    tr = soup.find_all("tbody")[2].find_all("tr")
-    for x in tr:
-        EU = x.find("td",{"bgcolor":"#bbbbff"})
-        if EU != None:
-            url = x.find("td").find("a")["href"]
-            if "/wiki/" in url:
-                urls.append("https://fr.wikipedia.org"+url)
+
 def PS_vita():
     response = r.get(liens[21])
     soup = bs(response.content, 'lxml')
@@ -386,20 +332,7 @@ def PC():
                 x += 1
             except:
                 break
-def Wii_U():
-    response = r.get(liens[25])
-    soup = bs(response.content, 'lxml')
-    body = soup.find_all("tbody")[2]
-    tr = body.find_all("tr")
-    for x in tr:
-        try:
-            EU = x.find_all("td")[6].text
-            if "NC" not in EU:
-                lien = x.find_all("td")[0].find("a")["href"]
-                if "/wiki/" in lien:
-                            urls.append("https://fr.wikipedia.org"+lien)
-        except:
-            pass
+
     
 def Xbox():
     response = r.get(liens[27])
@@ -461,7 +394,6 @@ def Xbox_series():
 def main():
     DS()
     GB()
-    GBA()
     GBC()
     GC()
     Master_System()
@@ -469,17 +401,17 @@ def main():
     NES()
     N_six_quatre()
     PC()
-    PSP()
-    PS_cinq()
-    PS_deux()
-    PS_quatre()
-    PS_trois()
-    PS_un()
+    # PS1 à PS5
+    for x in range(15,19+1):
+        get_urls(x, urls)
+    get_links(0, 2, 0, td_check_index=1, td_check_value="#bbbbff")  # Dreamcast
+    get_links(3, 1, 0, 6, "✔\n")  # GBA
+    get_links(20, 2, 0, td_check_index=1, td_check_value="#bbbbff")  # PSP
+    get_links(25, 2, 0, 6, "NC")  # Wii U
     PS_vita()
     SNES()
     Super_Famicom()
     Wii()
-    Wii_U()
     Xbox()
     Xbox_one()
     Xbox_series()
