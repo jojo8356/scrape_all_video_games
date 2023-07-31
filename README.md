@@ -1,1 +1,15 @@
-# scrape_all_video_games
+# Readme - Code Overview and Explanation
+
+## Prerequisites
+
+## Installation
+
+## Setting Up
+
+## Usage
+
+## Commands
+
+## Miscellaneous
+
+## Disclaimer
